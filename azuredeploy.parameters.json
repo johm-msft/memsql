@@ -6,7 +6,7 @@
       "value": "msadmin"
     },
     "baseUri": {
-      "value": "https://stageb15002ab66154dae8e2.blob.core.windows.net/memsql-stageartifacts"
+      "value": "https://raw.githubusercontent.com/johm-msft/memsql/"
     },
     "sshKeyData": {
       "value": "ssh-rsa AAAAB3NzaC1yc2EAAAABJQAAAQEAoUNpz3tRf+oObCRfH+nUcu2Z3ZMO3rtRq5NMqdKyN9bfqZlksYnR91YYIsjrCV+TRXL3qTZNRJ8t0Yuu/Q5P5AHMYJGxCKb2dx/62FZyuoMEuK3WlSpvS5TROr4nKh44d7QssZCwCQM54LtWolhfcdpBeD+3Ljo+RBtvJ08xsrbb90ci4lOVcybAsWWoQB2q20Vz0FkCeg+WfxibOOh33N6WbXVXeP3P5WEOCqk1e23SwC14TTOIgpqSZFXqFVpIvhAQxb45YYQG9aDugc7YrxNKgTPbsgmohqs3m+XW3nl5xpyRaamh5pGm6CGWkcrJjQ0z2zcwFixSHVm2BECa/Q== memsql@10.0.2.4"
