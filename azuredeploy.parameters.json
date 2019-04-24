@@ -1,0 +1,34 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "adminUsername": {
+      "value": "msadmin"
+    },
+    "baseUri": {
+      "value": "https://stageb15002ab66154dae8e2.blob.core.windows.net/memsql-stageartifacts"
+    },
+    "sshKeyData": {
+      "value": "ssh-rsa AAAAB3NzaC1yc2EAAAABJQAAAQEAoUNpz3tRf+oObCRfH+nUcu2Z3ZMO3rtRq5NMqdKyN9bfqZlksYnR91YYIsjrCV+TRXL3qTZNRJ8t0Yuu/Q5P5AHMYJGxCKb2dx/62FZyuoMEuK3WlSpvS5TROr4nKh44d7QssZCwCQM54LtWolhfcdpBeD+3Ljo+RBtvJ08xsrbb90ci4lOVcybAsWWoQB2q20Vz0FkCeg+WfxibOOh33N6WbXVXeP3P5WEOCqk1e23SwC14TTOIgpqSZFXqFVpIvhAQxb45YYQG9aDugc7YrxNKgTPbsgmohqs3m+XW3nl5xpyRaamh5pGm6CGWkcrJjQ0z2zcwFixSHVm2BECa/Q== memsql@10.0.2.4"
+    },
+    "networkName": {
+      "value": "memsql-vnet"
+    },
+    "memsqlLicense": {
+      "value": "BDI2ZDA3YThjNjExYTQ0Y2Y5ZTRkODM0N2Y0MjQ0ZmZhAAAAAAAAAAAAAAIAAAAAAAQwNgIZAJvfIw0aV+zGzYAcYJhmbzQdYgfWuRtizAIZAJHfUvauecYoi5leg6ya0DrO2zmgSaAhTQ=="
+    },
+    "memsqlRootPassword": {
+      "value": "Ilikecheese26!"
+    },
+    "agg-avname": {
+      "value": "agg-av-set"
+    },
+    "leaf-avname": {
+      "value": "leaf-av-set"
+    }
+
+
+
+
+  }
+}

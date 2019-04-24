@@ -1,0 +1,112 @@
+﻿{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "networkName": {
+      "type": "string",
+      "defaultValue": "memsql-vnet",
+      "metadata": {
+        "description": "The memSql vNet"
+      }
+    },
+    "addressPrefixes": {
+      "type": "string",
+      "defaultValue": "10.0.0.0/16",
+      "metadata": {
+        "description": "The memSql vNET prefix"
+      }
+    },
+    "aggSubnetName": {
+      "type": "string",
+      "defaultValue": "agg-subnet",
+      "metadata": {
+        "description": "The aggregator subnet name"
+      }
+    },
+    "aggSubnetPrefix": {
+      "type": "string",
+      "defaultValue": "10.0.0.0/24",
+      "metadata": {
+        "description": "The aggregator subnet"
+      }
+    },
+    "leafSubnetName": {
+      "type": "string",
+      "defaultValue": "leaf-subnet",
+      "metadata": {
+        "description": "The leaf subnet name"
+      }
+    },
+    "leafSubnetPrefix": {
+      "type": "string",
+      "defaultValue": "10.0.1.0/24",
+      "metadata": {
+        "description": "The leaf center subnet"
+      }
+    },
+    "masterSubnetName": {
+      "type": "string",
+      "defaultValue": "mas-subnet",
+      "metadata": {
+        "description": "The aggregator subnet name"
+      }
+    },
+    "masterSubnetPrefix": {
+      "type": "string",
+      "defaultValue": "10.0.2.0/24",
+      "metadata": {
+        "description": "The master subnet"
+      }
+    }
+  },
+  "variables": {
+    "memsql-vnetPrefix": "[parameters('addressPrefixes')]",
+    "memsql-vnetSubnet1Name": "[parameters('aggSubnetName')]",
+    "memsql-vnetSubnet1Prefix": "[parameters('aggSubnetPrefix')]",
+    "memsql-vnetSubnet2Name": "[parameters('leafSubnetName')]",
+    "memsql-vnetSubnet2Prefix": "[parameters('leafSubnetPrefix')]",
+    "memsql-vnetSubnet3Name": "[parameters('masterSubnetName')]",
+    "memsql-vnetSubnet3Prefix": "[parameters('masterSubnetPrefix')]"
+  },
+  "resources": [
+    {
+      "name": "[parameters('networkName')]",
+      "type": "Microsoft.Network/virtualNetworks",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2016-03-30",
+      "dependsOn": [],
+      "tags": {
+        "displayName": "[parameters('networkName')]"
+      },
+      "properties": {
+        "addressSpace": {
+          "addressPrefixes": [
+            "[variables('memsql-vnetPrefix')]"
+          ]
+        },
+        "subnets": [
+          {
+            "name": "[variables('memsql-vnetSubnet1Name')]",
+            "properties": {
+              "addressPrefix": "[variables('memsql-vnetSubnet1Prefix')]"
+            }
+          },
+          {
+            "name": "[variables('memsql-vnetSubnet2Name')]",
+            "properties": {
+              "addressPrefix": "[variables('memsql-vnetSubnet2Prefix')]"
+            }
+          },
+          {
+            "name": "[variables('memsql-vnetSubnet3Name')]",
+            "properties": {
+              "addressPrefix": "[variables('memsql-vnetSubnet3Prefix')]"
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "outputs": {
+  }
+}

@@ -1,0 +1,341 @@
+﻿{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "adminUsername": {
+      "type": "string",
+      "metadata": {
+        "description": "Username for the Virtual Machine."
+      }
+    },
+    "sshKeyData": {
+      "type": "string",
+      "metadata": {
+        "description": "SSH rsa public key file as a string."
+      }
+    },
+    "nodeType": {
+      "type": "string",
+      "defaultValue": "master",
+      "metadata": {
+        "description": "Define if it is a leaf or aggregator node"
+      }
+    },
+    "virtualMachineSize": {
+      "type": "string",
+      "defaultValue": "Standard_DS3_v2",
+      "metadata": {
+        "description": "Virtual Machine Size"
+      }
+    },
+    "networkName": {
+      "type": "string",
+      "defaultValue": "mem-sql",
+      "metadata": {
+        "description": "Virtual Network Name"
+
+      }
+    },
+    "memsqlLicense": {
+      "type": "string",
+      "metadata": {
+        "description": "Memsql Installation License"
+      }
+    },
+    "memsqlRootPassword": {
+      "type": "string",
+      "metadata": {
+        "description": "memsql root password"
+      }
+    },
+    "availabilitySetName": {
+      "type": "string",
+      "metadata": {
+        "description": "availabilty set name"
+      }
+    },
+    "leafNodesIPAddressList": {
+      "type": "string",
+      "metadata": {
+        "description": "a string delimited list of the addresses of all leaf nodes"
+      }
+    },
+    "aggNodesIPAddressList": {
+      "type": "string",
+      "metadata": {
+        "description": "a string delimited list of the addresses of all agg nodes"
+      }
+    },
+    "masterSubnetName": {
+      "type": "string",
+      "defaultValue": "mas-subnet",
+      "metadata": {
+        "description": "master subnet name"
+      }
+    }
+  },
+  "variables": {
+    "deploymentConfig": {
+      "apiVersions": {
+        "nicApiVersion": "2017-06-01",
+        "deploymentApiVersion": "2018-05-01",
+        "vmApiVersion": "2017-03-30",
+        "publicIpApiVersion": "2017-11-01",
+        "vnetApiVersion": "2016-03-30",
+        "nsgApiVersion": "2018-11-01",
+        "vmExtensionApiVersion": "2015-06-15",
+        "subnetApiVersion": "2017-10-01",
+        "applicationGwApiVersion": "2017-10-01",
+        "availabilitySetApiVersion": "2017-03-30",
+        "loadBalancerApiVersion": "2018-02-01",
+        "storageApiVersion": "2018-07-01"
+      }
+    },
+    "storageAccountName": "[concat(parameters('nodeType'),uniquestring(resourceGroup().id))]",
+    "storageAccountType": "Standard_LRS",
+    "subnetmaster": "[concat(resourceId('Microsoft.Network/virtualNetworks',parameters('networkName')), '/subnets/',parameters('masterSubnetName'))]",
+    "sshKeyPath": "[concat('/home/',parameters('adminUsername'),'/.ssh/authorized_keys')]",
+    "publicIPAddressName": "master-pubip",
+    "publicIPAddressType": "dynamic",
+    "computeconfig": {
+      "vminfo": {
+        "vmname": "master"
+      },
+      "imageInfo": {
+        "imagePublisher": "RedHat",
+        "offer": "RHEL",
+        "sku": "7-RAW-CI",
+        "version": "latest"
+      }
+    },
+    //cloud-init
+    "cloud-config": "#cloud-config\n\n",
+    "repoupgrade": "apt_update: false\napt_upgrade: false\n",
+    "managedEtcHosts": "\nmanage_etc_hosts: true",
+    //run section
+    "data-disk-config-step1": "\n- sudo mkdir /mnt/memsql-data",
+    "data-disk-config-step2": "\n- sudo mkdir /mnt/memsql-log",
+    "data-disk-config-step3": "\n- for file in /dev/disk/azure/scsi1/*;do sudo pvcreate -ff -y $file;done",
+    "data-disk-config-step4": "\n- DISKS=$(ls /dev/disk/azure/scsi1/*)",
+    "data-disk-config-step5": "\n- sudo vgcreate vgmemsqldata $DISKS",
+    "data-disk-config-step6": "\n- PHYSVOLUMES=$(ls -A /dev/disk/azure/scsi1 |wc -l)\n- STRIPESIZE=64",
+    "data-disk-config-step7": "\n- sudo lvcreate -i$PHYSVOLUMES -I$STRIPESIZE -l 70%FREE -n datalv vgmemsqldata",
+    "data-disk-config-step8": "\n- sudo lvcreate -i$PHYSVOLUMES -I$STRIPESIZE -l 100%FREE -n loglv vgmemsqldata",
+    "data-disk-config-step9": "\n- sudo mkfs.ext4 /dev/vgmemsqldata/datalv\n- sudo mkfs.ext4 /dev/vgmemsqldata/loglv",
+    "data-disk-config-step10": "\n- sudo mount /dev/vgmemsqldata/datalv /mnt/memsql-data\n- sudo mount /dev/vgmemsqldata/loglv /mnt/memsql-log",
+    "data-disk-config-step11": "\n- echo '/dev/vgmemsqldata/datalv /mnt/memsql-data  ext4  defaults  0  2'|sudo tee -a /etc/fstab\n- echo '/dev/vgmemsqldata/loglv /mnt/memsql-log  ext4  defaults  0  2'|sudo tee -a /etc/fstab",
+    "data-disk-config-all": "[concat(variables('data-disk-config-step1'),variables('data-disk-config-step2'),variables('data-disk-config-step3'),variables('data-disk-config-step4'),variables('data-disk-config-step5'),variables('data-disk-config-step6'),variables('data-disk-config-step7'),variables('data-disk-config-step8'),variables('data-disk-config-step9'),variables('data-disk-config-step10'),variables('data-disk-config-step11'))]",
+
+    "jqDownload": "\n- sudo wget https://github.com/stedolan/jq/releases/download/jq-1.5/jq-linux64 -O jq",
+    "jqChown": "\n- sudo chmod +x jq",
+    "jqMv2Bin": "\n- sudo mv jq /usr/local/bin",
+    "firewallRules": "\n- sudo firewall-offline-cmd -p 3306:tcp\n- sudo firewall-offline-cmd -p 8080:tcp\n- sudo kill -HUP firewalld",
+    "makeDownloadDir": "\n- sudo mkdir /usr/local/downloads\n- cd /usr/local/downloads",
+    "makeLeafNodeTempFile": "[concat('\n- leafNodeIPAddresses=',parameters('leafNodesIPAddressList'),'\n- echo $leafNodeIPAddresses | sudo tee /tmp/leafNodeIpAddress.txt > /dev/null')]",
+    "removeSpecialCharactersAgg": "\n- sudo sed -i 's/\\[//g' /tmp/leafNodeIpAddress.txt\n- sudo sed -i 's/\\]//g' /tmp/leafNodeIpAddress.txt",
+    "makeAggNodeTempFile": "[concat('\n- aggNodeIPAddresses=',parameters('aggNodesIPAddressList'),'\n- echo $aggNodeIPAddresses | sudo tee /tmp/aggNodeIpAddress.txt > /dev/null')]",
+    "removeSpecialCharactersLeaf": "\n- sudo sed -i 's/\\]//g' /tmp/aggNodeIpAddress.txt\n- sudo sed -i 's/\\[//g' /tmp/aggNodeIpAddress.txt",
+    "privateIpAddress": "\n- LOCALIP=$(curl -H Metadata:true 'http://169.254.169.254/metadata/instance/network/interface/0/ipv4/ipAddress/0/privateIpAddress?api-version=2017-08-01&format=text')",
+
+    "memsqlRootPwd": "[concat('\n- ROOT_PASSWORD=',parameters('memsqlRootPassword'))]",
+    "memsqlDataDirOwner": "\n- sudo chown -LR memsql:memsql /mnt/memsql-data",
+    "memsql-install-step1": "\n- ARRAY=('memsqlserver' 'memsqltoolbox' 'memsqlstudio' 'memsqlclient')\n- BASEURL=\"https://release.memsql.com\"\n- INDEXURL=\"$BASEURL/production/index/{0}/latest.json\"",
+    "memsql-install-step2": "\n- for i in \"${ARRAY[@]}\"; do RESULT=$(echo $INDEXURL | sed \"s/{0}/$i/g\"); echo $RESULT; FIND_DL_PATH=$(curl $RESULT | jq '.[\"packages\"]| .[].Path' |grep rpm |tr -d '\"'); DL_PATH=\"$BASEURL/$FIND_DL_PATH\";sudo wget $DL_PATH; done",
+    "memsql-install-step3": "\n- sudo rpm -i /usr/local/downloads/*.rpm",
+    "memsql-install-step4": "\n- sudo memsqlctl create-node --password \"$ROOT_PASSWORD\" --datadir /mnt/memsql-data -y",
+    "memsql-install-step5": "[concat('\n- sudo memsqlctl set-license --license ',parameters('memsqlLicense'),' --yes')]",
+    "memsql-install-step6": "\n- sudo memsqlctl bootstrap-aggregator --host $LOCALIP --yes",
+    "memsql-install-step7": "\n- sudo memsqlctl update-config --key=redundancy_level --value=2 --set-global --yes",
+    "memsql-install-step8": "\n- sudo memsqlctl update-config --key=sync_permissions --value=ON --set-global --yes",
+    "memsql-install-step9": "\n- for i in $(cat /tmp/leafNodeIpAddress.txt|tr \",\" \"\\n\"); do sudo memsqlctl add-leaf --user root --password \"$ROOT_PASSWORD\" --host $i --yes;done",
+    "memsql-install-step10": "\n- for i in $(cat /tmp/aggNodeIpAddress.txt|tr \",\" \"\\n\"); do sudo memsqlctl add-aggregator --user root --password \"$ROOT_PASSWORD\" --host $i --yes;done",
+    "memsql-install-step11": "\n- sudo systemctl start memsql-studio",
+    "memsql-install-step12": "[concat('\n- USERNAME=',parameters('adminUsername'))]",
+    "memsql-install-step13": "[concat('\n- sudo -u $USERNAME ssh-keygen -t rsa -N \"\" -f /home/$USERNAME/.ssh/memsql-toolbox')]",
+    "memsql-install-step14": "\n- memsql -u root --password=\"$ROOT_PASSWORD\" -s -N -e \"CREATE DATABASE memsql_security\"",
+    "memsql-install-step15": "\n- memsql -u root --password=\"$ROOT_PASSWORD\" -s -N -e \"CREATE REFERENCE TABLE memsql_security.keys (value TEXT, id int primary key auto_increment)\"",
+    "memsql-install-step16": "\n- PUBLIC_KEY=$(cat /home/$USERNAME/.ssh/memsql-toolbox.pub)",
+    "memsql-install-step17": "\n- sudo memsql -u root --password=\"$ROOT_PASSWORD\" -s -N -e \"INSERT INTO memsql_security.keys(value) values (\\\"$PUBLIC_KEY\\\")\"",
+    "memsql-install-step18": "\n- for i in $(cat /tmp/leafNodeIpAddress.txt|tr \",\" \"\\n\"); do echo $i; until (sudo -u $USERNAME memsql-toolbox-config register-host --host $i -i /home/$USERNAME/.ssh/memsql-toolbox -y);do sleep 2; done;done",
+    "memsql-install-step19": "\n- for i in $(cat /tmp/aggNodeIpAddress.txt|tr \",\" \"\\n\"); do echo $i; until (sudo -u $USERNAME memsql-toolbox-config register-host --host $i -i /home/$USERNAME/.ssh/memsql-toolbox -y);do sleep 2; done;done",
+    "memsql-install-step20": "\n- memsql -u root --password=\"$ROOT_PASSWORD\" -s -N -e \"DROP DATABASE memsql_security\"",
+    "memsql-install-step21": "\n- sudo -u $USERNAME memsql-toolbox-config register-host --locahost --host $LOCALIP --yes",
+    "memsql-install-all": "[concat(variables('memsqlRootPwd'),variables('memsql-install-step1'),variables('memsql-install-step2'),variables('memsql-install-step3'),variables('memsqlDataDirOwner'),variables('memsql-install-step4'),variables('memsql-install-step5'),variables('memsql-install-step6'),variables('memsql-install-step7'),variables('memsql-install-step8'),variables('memsql-install-step9'),variables('memsql-install-step9'),variables('memsql-install-step10'),variables('memsql-install-step11'),variables('memsql-install-step12'),variables('memsql-install-step13'),variables('memsql-install-step14'),variables('memsql-install-step15'),variables('memsql-install-step16'),variables('memsql-install-step17'),variables('memsql-install-step18'),variables('memsql-install-step19'),variables('memsql-install-step20'),variables('memsql-install-step21'))]",
+    "runCmd": "[concat('\nruncmd:',variables('data-disk-config-all'),variables('jqDownload'),variables('jqChown'),variables('jqMv2Bin'),variables('privateIpAddress'),variables('makeLeafNodeTempFile'),variables('makeAggNodeTempFile'),variables('removeSpecialCharactersAgg'),variables('removeSpecialCharactersLeaf'),variables('firewallRules'),variables('makeDownloadDir'),variables('memsql-install-all'))]",
+    //end run section
+
+    "customData": "[concat(variables('cloud-config'), variables('repoupgrade'),variables('managedEtcHosts'),variables('runCmd'))]"
+
+  },
+  "resources": [
+    {
+      "name": "master-nsg",
+      "type": "Microsoft.Network/networkSecurityGroups",
+      "apiVersion": "[variables('deploymentConfig').apiVersions.nsgApiVersion]",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "securityRules": [
+          {
+            "name": "default-allow-ssh",
+            "properties": {
+              "priority": 1000,
+              "protocol": "Tcp",
+              "access": "Allow",
+              "direction": "Inbound",
+              "sourceAddressPrefix": "*",
+              "sourcePortRange": "*",
+              "destinationAddressPrefix": "*",
+              "destinationPortRange": "22"
+
+            }
+
+
+
+          },
+          {
+            "name": "default-allow-8080",
+            "properties": {
+              "priority": 1001,
+              "protocol": "Tcp",
+              "access": "Allow",
+              "direction": "Inbound",
+              "sourceAddressPrefix": "*",
+              "sourcePortRange": "*",
+              "destinationAddressPrefix": "*",
+              "destinationPortRange": "8080"
+
+            }
+
+
+
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "[variables('deploymentConfig').apiVersions.publicIpApiVersion]",
+      "type": "Microsoft.Network/publicIPAddresses",
+      "name": "[variables('publicIPAddressName')]",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "publicIPAllocationMethod": "[variables('publicIPAddressType')]"
+
+      }
+    },
+    {
+      "apiVersion": "[variables('deploymentConfig').apiVersions.nicApiVersion]",
+      "type": "Microsoft.Network/networkInterfaces",
+      "name": "[Concat(variables('computeconfig').vminfo.vmname, '-NIC')]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[concat('Microsoft.Network/publicIPAddresses/', variables('publicIPAddressName'))]"
+      ],
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "ipconfig1",
+            "properties": {
+              "publicIPAddress": {
+                "id": "[resourceId ('Microsoft.Network/publicIPAddresses/', variables('publicIPAddressName'))]"
+              },
+              "privateIPAllocationMethod": "Dynamic",
+              "subnet": {
+                "id": "[variables('subnetmaster')]"
+
+              }
+
+
+            }
+          }
+        ],
+        "networkSecurityGroup": {
+          "id": "[resourceId(resourceGroup().name, 'Microsoft.Network/networkSecurityGroups', 'master-nsg')]"
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Storage/storageAccounts",
+      "name": "[variables('storageAccountName')]",
+      "apiVersion": "[variables('deploymentConfig').apiVersions.storageApiVersion]",
+      "location": "[resourceGroup().location]",
+      "sku": {
+        "name": "[variables('storageAccountType')]"
+      },
+      "kind": "Storage",
+      "properties": {}
+    },
+    {
+      "apiVersion": "[variables('deploymentConfig').apiVersions.vmApiVersion]",
+      "type": "Microsoft.Compute/virtualMachines",
+      "name": "[concat(variables('computeconfig').vminfo.vmname)]",
+      "location": "[resourceGroup().location]",
+
+      "dependsOn": [
+        "[resourceId('Microsoft.Storage/storageAccounts/', variables('storageAccountName'))]"
+      ],
+      "properties": {
+        "hardwareProfile": {
+          "vmSize": "[parameters('virtualMachineSize')]"
+        },
+        "availabilitySet": {
+          "id": "[resourceId('Microsoft.Compute/availabilitySets',parameters('availabilitySetName'))]"
+        },
+        "osProfile": {
+          "computerName": "[concat(variables('computeconfig').vminfo.vmname)]",
+          "adminUsername": "[parameters('adminUsername')]",
+          "linuxConfiguration": {
+            "disablePasswordAuthentication": true,
+            "ssh": {
+              "publicKeys": [
+                {
+                  "path": "[variables('sshKeyPath')]",
+                  "keyData": "[parameters('sshKeyData')]"
+                }
+              ]
+            }
+          },
+          "customData": "[base64(variables('customData'))]"
+
+        },
+        "storageProfile": {
+          "imageReference": {
+            "publisher": "[variables('computeconfig').imageInfo.imagePublisher]",
+            "offer": "[variables('computeconfig').imageInfo.offer]",
+            "sku": "[variables('computeconfig').imageInfo.sku]",
+            "version": "[variables('computeconfig').imageInfo.version]"
+          },
+          "osDisk": {
+            "createOption": "FromImage"
+          },
+          "dataDisks": [
+            {
+              "diskSizeGB": 1023,
+              "lun": 0,
+              "createOption": "Empty"
+            }
+          ]
+        },
+        "networkProfile": {
+          "networkInterfaces": [
+            {
+              "id": "[resourceId('Microsoft.Network/networkInterfaces',concat(variables('computeconfig').vminfo.vmname,'-NIC'))]"
+
+            }
+          ]
+        },
+        "diagnosticsProfile": {
+          "bootDiagnostics": {
+            "enabled": true,
+            "storageUri": "[concat(reference(concat('Microsoft.Storage/storageAccounts/', variables('storageAccountName')), '2016-01-01').primaryEndpoints.blob)]"
+          }
+        }
+      }
+
+    }
+
+
+  ],
+  "outputs": {
+
+  }
+}
