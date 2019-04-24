@@ -6,7 +6,7 @@
       "value": "msadmin"
     },
     "baseUri": {
-      "value": "https://raw.githubusercontent.com/johm-msft/memsql/"
+      "value": "https://raw.githubusercontent.com/johm-msft/memsql/master"
     },
     "sshKeyData": {
       "value": "GEN-SSH-PUB-KEY"

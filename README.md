@@ -24,5 +24,11 @@ There are a couple of things that need to be done before attempting to deploy to
 
 #Deploying to Azure
 
-[![Deploy to Azure](http://azuredeploy.net/deploybutton.png)](https://azuredeploy.net/)
+1. Open `https://portal.azure.com`
+2. Open CloudShell in the top right hand corner look for the >_ symbol
+3. Change to your cloud drive type `cd /usr/<username>/clouddrive`
+4. Clone the repo using `git clone https://github.com/johm-msft/memsql.git`
+5. Modify the azuredeploy.parameters.json file, target the sshKeyData, memsqlLicense and memsqlRootPassword, use nano to make and save the edits. For aware the sshKey data should include the `ssh-rsa <publickey> user@host` format
+6. Create a new resource group in the region you want to deploy for example `New-AzureRmResourceGroup -Name test -Location westus2`
+7. Create a new resource group deployment using the resource group you just created `New-AzureRmResourceGroupDeployment -TemplateFile ./azuredeploy.json -TemplateParameterFile ./azuredeploy.parameters.json -ResourceGroupName test`
 
