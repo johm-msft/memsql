@@ -132,7 +132,7 @@
     "nodes": "[concat(parameters('baseUri'), '\\nodes\\nodes.json')]",
     "master": "[concat(parameters('baseUri'), '\\nodes\\master.json')]",
     "avsets": "[concat(parameters('baseUri'), '\\nodes\\avsets.json')]",
-    "networkapi": "2017-08-01",
+    "networkapi": "2017-05-10",
     "computeapi": "2017-08-01"
   },
   "resources": [
