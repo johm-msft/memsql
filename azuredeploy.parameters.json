@@ -9,16 +9,16 @@
       "value": "https://raw.githubusercontent.com/johm-msft/memsql/"
     },
     "sshKeyData": {
-      "value": "ssh-rsa AAAAB3NzaC1yc2EAAAABJQAAAQEAoUNpz3tRf+oObCRfH+nUcu2Z3ZMO3rtRq5NMqdKyN9bfqZlksYnR91YYIsjrCV+TRXL3qTZNRJ8t0Yuu/Q5P5AHMYJGxCKb2dx/62FZyuoMEuK3WlSpvS5TROr4nKh44d7QssZCwCQM54LtWolhfcdpBeD+3Ljo+RBtvJ08xsrbb90ci4lOVcybAsWWoQB2q20Vz0FkCeg+WfxibOOh33N6WbXVXeP3P5WEOCqk1e23SwC14TTOIgpqSZFXqFVpIvhAQxb45YYQG9aDugc7YrxNKgTPbsgmohqs3m+XW3nl5xpyRaamh5pGm6CGWkcrJjQ0z2zcwFixSHVm2BECa/Q== memsql@10.0.2.4"
+      "value": "GEN-SSH-PUB-KEY"
     },
     "networkName": {
       "value": "memsql-vnet"
     },
     "memsqlLicense": {
-      "value": "BDI2ZDA3YThjNjExYTQ0Y2Y5ZTRkODM0N2Y0MjQ0ZmZhAAAAAAAAAAAAAAIAAAAAAAQwNgIZAJvfIw0aV+zGzYAcYJhmbzQdYgfWuRtizAIZAJHfUvauecYoi5leg6ya0DrO2zmgSaAhTQ=="
+      "value": "<OBTAIN VALID LICENSE FROM MEMSQL.COM"
     },
     "memsqlRootPassword": {
-      "value": "Ilikecheese26!"
+      "value": "GEN-PASSWORD"
     },
     "agg-avname": {
       "value": "agg-av-set"
