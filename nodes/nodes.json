@@ -147,7 +147,7 @@
 
     "memsqlRootPwd": "[concat('\n- ROOT_PASSWORD=',parameters('memsqlRootPassword'))]",
     "memsqlDataDirOwner": "\n- sudo chown -LR memsql:memsql /mnt/memsql-data",
-    "memsql-install-step1": "\n- ARRAY=('memsqlserver' 'memsqltoolbox' 'memsqlstudio' 'memsqlclient')\n- BASEURL=\"https://release.memsql.com\"\n- INDEXURL=\"$BASEURL/production/index/{0}/latest.json\"",
+    "memsql-install-step1": "\n- ARRAY=('memsqlserver' 'memsqlclient')\n- BASEURL=\"https://release.memsql.com\"\n- INDEXURL=\"$BASEURL/production/index/{0}/latest.json\"",
     "memsql-install-step2": "\n- for i in \"${ARRAY[@]}\"; do RESULT=$(echo $INDEXURL | sed \"s/{0}/$i/g\"); echo $RESULT; FIND_DL_PATH=$(curl $RESULT | jq '.[\"packages\"]| .[].Path' |grep rpm |tr -d '\"'); DL_PATH=\"$BASEURL/$FIND_DL_PATH\";sudo wget $DL_PATH; done",
     "memsql-install-step3": "\n- sudo rpm -i /usr/local/downloads/*.rpm",
     "memsql-install-step4": "\n- sudo memsqlctl create-node --password \"$ROOT_PASSWORD\" --datadir /mnt/memsql-data -y",
