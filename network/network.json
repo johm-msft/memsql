@@ -43,21 +43,8 @@
       "metadata": {
         "description": "The leaf center subnet"
       }
-    },
-    "masterSubnetName": {
-      "type": "string",
-      "defaultValue": "mas-subnet",
-      "metadata": {
-        "description": "The aggregator subnet name"
-      }
-    },
-    "masterSubnetPrefix": {
-      "type": "string",
-      "defaultValue": "10.0.2.0/24",
-      "metadata": {
-        "description": "The master subnet"
-      }
     }
+    
   },
   "variables": {
     "memsql-vnetPrefix": "[parameters('addressPrefixes')]",
@@ -65,8 +52,7 @@
     "memsql-vnetSubnet1Prefix": "[parameters('aggSubnetPrefix')]",
     "memsql-vnetSubnet2Name": "[parameters('leafSubnetName')]",
     "memsql-vnetSubnet2Prefix": "[parameters('leafSubnetPrefix')]",
-    "memsql-vnetSubnet3Name": "[parameters('masterSubnetName')]",
-    "memsql-vnetSubnet3Prefix": "[parameters('masterSubnetPrefix')]"
+    
   },
   "resources": [
     {
@@ -96,13 +82,8 @@
             "properties": {
               "addressPrefix": "[variables('memsql-vnetSubnet2Prefix')]"
             }
-          },
-          {
-            "name": "[variables('memsql-vnetSubnet3Name')]",
-            "properties": {
-              "addressPrefix": "[variables('memsql-vnetSubnet3Prefix')]"
-            }
           }
+          
         ]
       }
     }

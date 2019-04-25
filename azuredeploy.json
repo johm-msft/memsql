@@ -38,7 +38,7 @@
     },
     "masterSubnetName": {
       "type": "string",
-      "defaultValue": "mas-subnet",
+      "defaultValue": "agg-subnet",
       "metadata": {
         "description": "master subnet name"
       }
@@ -168,15 +168,8 @@
           "leafSubnetPrefix": {
             "value": "[parameters('leafSubnetPrefix')]"
 
-          },
-          "masterSubnetName": {
-            "value": "[parameters('masterSubnetName')]"
-          },
-          "masterSubnetPrefix": {
-            "value": "[parameters('masterSubnetPrefix')]"
           }
-
-
+         
         }
       }
 

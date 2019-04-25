@@ -68,9 +68,9 @@
     },
     "masterSubnetName": {
       "type": "string",
-      "defaultValue": "mas-subnet",
+      "defaultValue": "agg-subnet",
       "metadata": {
-        "description": "master subnet name"
+        "description": "agg subnet name"
       }
     }
   },
